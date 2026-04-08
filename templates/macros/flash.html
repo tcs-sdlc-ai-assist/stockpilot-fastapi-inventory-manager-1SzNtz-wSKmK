@@ -1,0 +1,40 @@
+{# templates/macros/flash.html #}
+{% macro flash_banner(messages) %}
+  {% if messages %}
+    {% for msg in messages %}
+      {% if msg is mapping %}
+        {% set category = msg.get('category', 'info') %}
+        {% set text = msg.get('text', '') %}
+      {% else %}
+        {% set category = 'info' %}
+        {% set text = msg %}
+      {% endif %}
+
+      {% if category == 'success' %}
+        {% set bg_class = 'bg-green-100 text-green-800 border-green-500' %}
+        {% set btn_class = 'text-green-700 hover:text-green-900' %}
+        {% set icon = '✓' %}
+      {% elif category == 'error' %}
+        {% set bg_class = 'bg-red-100 text-red-800 border-red-500' %}
+        {% set btn_class = 'text-red-700 hover:text-red-900' %}
+        {% set icon = '✗' %}
+      {% elif category == 'warning' %}
+        {% set bg_class = 'bg-amber-100 text-amber-800 border-amber-500' %}
+        {% set btn_class = 'text-amber-700 hover:text-amber-900' %}
+        {% set icon = '⚠' %}
+      {% else %}
+        {% set bg_class = 'bg-blue-100 text-blue-800 border-blue-500' %}
+        {% set btn_class = 'text-blue-700 hover:text-blue-900' %}
+        {% set icon = 'ℹ' %}
+      {% endif %}
+
+      <div class="mt-2 mx-auto max-w-4xl px-4 py-3 rounded border-l-4 {{ bg_class }} flex justify-between items-center text-sm" role="alert">
+        <div class="flex items-center gap-2">
+          <span aria-hidden="true" class="font-bold">{{ icon }}</span>
+          <span>{{ text }}</span>
+        </div>
+        <button type="button" class="ml-4 {{ btn_class }} focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-current rounded px-1" aria-label="Dismiss message" onclick="this.parentElement.style.display='none'">✕</button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endmacro %}

@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Edit Item" if item else "Add Item" }} — StockPilot{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  {# ── Page Header ── #}
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900">{{ "Edit Item" if item else "Add New Item" }}</h1>
+      <p class="mt-1 text-sm text-slate-500">{{ "Update the details for this inventory item." if item else "Fill in the details to add a new inventory item." }}</p>
+    </div>
+    <a href="/items" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-teal-700 hover:bg-teal-50 transition-colors border border-slate-300">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+      </svg>
+      Back to Inventory
+    </a>
+  </div>
+
+  {# ── Form Card ── #}
+  <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+    <form method="post" action="{{ '/items/' ~ item.id ~ '/edit' if item else '/items/add' }}" class="space-y-5" novalidate>
+
+      {# ── Name ── #}
+      <div>
+        <label for="name" class="block text-sm font-medium text-slate-700 mb-1">
+          Item Name <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          value="{{ form_data.name if form_data and form_data.name else (item.name if item else '') }}"
+          required
+          placeholder="e.g. Wireless Mouse"
+          class="w-full rounded-md border {{ 'border-red-400 ring-1 ring-red-400' if errors and errors.name else 'border-slate-300' }} px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
+        >
+        {% if errors and errors.name %}
+          <p class="mt-1 text-xs text-red-600">{{ errors.name }}</p>
+        {% endif %}
+      </div>
+
+      {# ── SKU ── #}
+      <div>
+        <label for="sku" class="block text-sm font-medium text-slate-700 mb-1">
+          SKU <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          id="sku"
+          name="sku"
+          value="{{ form_data.sku if form_data and form_data.sku else (item.sku if item else '') }}"
+          required
+          placeholder="e.g. WM-001"
+          class="w-full rounded-md border {{ 'border-red-400 ring-1 ring-red-400' if errors and errors.sku else 'border-slate-300' }} px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
+        >
+        {% if errors and errors.sku %}
+          <p class="mt-1 text-xs text-red-600">{{ errors.sku }}</p>
+        {% endif %}
+      </div>
+
+      {# ── Description ── #}
+      <div>
+        <label for="description" class="block text-sm font-medium text-slate-700 mb-1">
+          Description
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          rows="3"
+          placeholder="Optional description of the item…"
+          class="w-full rounded-md border {{ 'border-red-400 ring-1 ring-red-400' if errors and errors.description else 'border-slate-300' }} px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-y"
+        >{{ form_data.description if form_data and form_data.description else (item.description if item and item.description else '') }}</textarea>
+        {% if errors and errors.description %}
+          <p class="mt-1 text-xs text-red-600">{{ errors.description }}</p>
+        {% endif %}
+      </div>
+
+      {# ── Category ── #}
+      <div>
+        <label for="category_id" class="block text-sm font-medium text-slate-700 mb-1">
+          Category <span class="text-red-500">*</span>
+        </label>
+        <select
+          id="category_id"
+          name="category_id"
+          required
+          class="w-full rounded-md border {{ 'border-red-400 ring-1 ring-red-400' if errors and errors.category_id else 'border-slate-300' }} px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors bg-white"
+        >
+          <option value="" disabled {{ 'selected' if not (form_data and form_data.category_id) and not (item and item.category_id) else '' }}>Select a category…</option>
+          {% if categories %}
+            {% set selected_category_id = (form_data.category_id | string) if form_data and form_data.category_id else ((item.category_id | string) if item and item.category_id else '') %}
+            {% for category in categories %}
+              <option value="{{ category.id }}" {{ 'selected' if (category.id | string) == selected_category_id else '' }}>{{ category.name }}</option>
+            {% endfor %}
+          {% endif %}
+        </select>
+        {% if errors and errors.category_id %}
+          <p class="mt-1 text-xs text-red-600">{{ errors.category_id }}</p>
+        {% endif %}
+      </div>
+
+      {# ── Quantity & Unit Price (side by side on md+) ── #}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {# Quantity #}
+        <div>
+          <label for="quantity" class="block text-sm font-medium text-slate-700 mb-1">
+            Quantity <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="number"
+            id="quantity"
+            name="quantity"
+            value="{{ form_data.quantity if form_data and form_data.quantity is not none else (item.quantity if item and item.quantity is not none else '') }}"
+            required
+            min="0"
+            step="1"
+            placeholder="0"
+            class="w-full rounded-md border {{ 'border-red-400 ring-1 ring-red-400' if errors and errors.quantity else 'border-slate-300' }} px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
+          >
+          {% if errors and errors.quantity %}
+            <p class="mt-1 text-xs text-red-600">{{ errors.quantity }}</p>
+          {% endif %}
+        </div>
+
+        {# Unit Price #}
+        <div>
+          <label for="unit_price" class="block text-sm font-medium text-slate-700 mb-1">
+            Unit Price <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 text-sm pointer-events-none">$</span>
+            <input
+              type="number"
+              id="unit_price"
+              name="unit_price"
+              value="{{ form_data.unit_price if form_data and form_data.unit_price is not none else (item.unit_price if item and item.unit_price is not none else '') }}"
+              required
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              class="w-full rounded-md border {{ 'border-red-400 ring-1 ring-red-400' if errors and errors.unit_price else 'border-slate-300' }} pl-7 pr-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
+            >
+          </div>
+          {% if errors and errors.unit_price %}
+            <p class="mt-1 text-xs text-red-600">{{ errors.unit_price }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      {# ── Reorder Level ── #}
+      <div>
+        <label for="reorder_level" class="block text-sm font-medium text-slate-700 mb-1">
+          Reorder Level
+        </label>
+        <input
+          type="number"
+          id="reorder_level"
+          name="reorder_level"
+          value="{{ form_data.reorder_level if form_data and form_data.reorder_level is not none else (item.reorder_level if item and item.reorder_level is not none else '') }}"
+          min="0"
+          step="1"
+          placeholder="Minimum stock before reorder alert"
+          class="w-full rounded-md border {{ 'border-red-400 ring-1 ring-red-400' if errors and errors.reorder_level else 'border-slate-300' }} px-3 py-2 text-sm text-slate-900 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors"
+        >
+        {% if errors and errors.reorder_level %}
+          <p class="mt-1 text-xs text-red-600">{{ errors.reorder_level }}</p>
+        {% endif %}
+        <p class="mt-1 text-xs text-slate-400">Leave blank to disable low-stock alerts for this item.</p>
+      </div>
+
+      {# ── Form Actions ── #}
+      <div class="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-slate-200">
+        <button
+          type="submit"
+          class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-colors shadow-sm"
+        >
+          {% if item %}
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+            </svg>
+            Update Item
+          {% else %}
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Add Item
+          {% endif %}
+        </button>
+        <a
+          href="/items"
+          class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 rounded-md text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-colors"
+        >
+          Cancel
+        </a>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="StockPilot — Modern Inventory Management System">
+  <title>{% block title %}StockPilot{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/css/custom.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+  {% block head %}{% endblock %}
+</head>
+<body class="h-full bg-slate-50 text-slate-800 flex flex-col min-h-screen">
+
+  {% from "macros/avatar.html" import avatar %}
+  {% from "macros/flash.html" import flash_banner %}
+
+  {# ── Navbar ── #}
+  <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-14">
+
+        {# Logo / Brand #}
+        <a href="/" class="flex items-center gap-2 text-teal-700 font-bold text-lg tracking-tight hover:text-teal-600 transition-colors">
+          <span class="text-xl" aria-hidden="true">📦</span>
+          <span>StockPilot</span>
+        </a>
+
+        {# Mobile menu button #}
+        <button type="button" id="mobile-menu-btn" class="md:hidden inline-flex items-center justify-center rounded-md p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500" aria-expanded="false" aria-controls="mobile-menu" aria-label="Toggle navigation menu">
+          <svg class="h-6 w-6" id="menu-icon-open" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+          <svg class="h-6 w-6 hidden" id="menu-icon-close" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {# Desktop nav links #}
+        <div class="hidden md:flex md:items-center md:gap-1">
+          {% if current_user %}
+            <a href="/dashboard" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-teal-700 hover:bg-teal-50 transition-colors">Dashboard</a>
+            <a href="/items" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-teal-700 hover:bg-teal-50 transition-colors">Inventory</a>
+            <a href="/categories" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-teal-700 hover:bg-teal-50 transition-colors">Categories</a>
+            {% if user_role == "admin" %}
+              <a href="/users" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-teal-700 hover:bg-teal-50 transition-colors">Users</a>
+            {% endif %}
+
+            <div class="ml-3 pl-3 border-l border-slate-200 flex items-center gap-3">
+              <div class="avatar-wrapper">
+                {{ avatar(user_role | default("staff"), "sm") }}
+                <span class="avatar-tooltip">{{ current_user.display_name | default(current_user.username | default("User")) }}</span>
+              </div>
+              <span class="text-sm text-slate-500 hidden lg:inline">{{ current_user.display_name | default(current_user.username | default("User")) }}</span>
+              <a href="/logout" class="ml-1 px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors">Logout</a>
+            </div>
+          {% else %}
+            <a href="/login" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-teal-700 hover:bg-teal-50 transition-colors">Login</a>
+            <a href="/register" class="ml-1 px-4 py-2 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors shadow-sm">Get Started</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# Mobile menu #}
+    <div class="md:hidden hidden" id="mobile-menu">
+      <div class="px-4 pt-2 pb-4 space-y-1 border-t border-slate-200 bg-white">
+        {% if current_user %}
+          <div class="flex items-center gap-2 px-3 py-2 mb-2">
+            {{ avatar(user_role | default("staff"), "sm") }}
+            <span class="text-sm font-medium text-slate-700">{{ current_user.display_name | default(current_user.username | default("User")) }}</span>
+            {% if user_role == "admin" %}
+              <span class="ml-auto text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Admin</span>
+            {% else %}
+              <span class="ml-auto text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full font-medium">Staff</span>
+            {% endif %}
+          </div>
+          <a href="/dashboard" class="block px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-teal-700 hover:bg-teal-50 transition-colors">Dashboard</a>
+          <a href="/items" class="block px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-teal-700 hover:bg-teal-50 transition-colors">Inventory</a>
+          <a href="/categories" class="block px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-teal-700 hover:bg-teal-50 transition-colors">Categories</a>
+          {% if user_role == "admin" %}
+            <a href="/users" class="block px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-teal-700 hover:bg-teal-50 transition-colors">Users</a>
+          {% endif %}
+          <div class="border-t border-slate-200 mt-2 pt-2">
+            <a href="/logout" class="block px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors">Logout</a>
+          </div>
+        {% else %}
+          <a href="/login" class="block px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-teal-700 hover:bg-teal-50 transition-colors">Login</a>
+          <a href="/register" class="block px-3 py-2 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors text-center shadow-sm">Get Started</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  {# ── Flash Messages ── #}
+  {% if flash_messages %}
+    <div class="no-print">
+      {{ flash_banner(flash_messages) }}
+    </div>
+  {% endif %}
+
+  {# ── Main Content ── #}
+  <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    {% block content %}{% endblock %}
+  </main>
+
+  {# ── Footer ── #}
+  <footer class="bg-white border-t border-slate-200 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2 text-slate-500 text-sm">
+          <span aria-hidden="true">📦</span>
+          <span>&copy; {{ now().year if now is defined else "2024" }} StockPilot. All rights reserved.</span>
+        </div>
+        <div class="flex items-center gap-4 text-sm">
+          {% if not current_user %}
+            <a href="/login" class="text-slate-500 hover:text-teal-600 transition-colors">Login</a>
+            <a href="/register" class="text-slate-500 hover:text-teal-600 transition-colors">Register</a>
+          {% else %}
+            <a href="/dashboard" class="text-slate-500 hover:text-teal-600 transition-colors">Dashboard</a>
+            <a href="/items" class="text-slate-500 hover:text-teal-600 transition-colors">Inventory</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  {# ── Mobile Menu Toggle Script ── #}
+  <script>
+    (function() {
+      var btn = document.getElementById('mobile-menu-btn');
+      var menu = document.getElementById('mobile-menu');
+      var iconOpen = document.getElementById('menu-icon-open');
+      var iconClose = document.getElementById('menu-icon-close');
+      if (btn && menu && iconOpen && iconClose) {
+        btn.addEventListener('click', function() {
+          var expanded = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', String(!expanded));
+          menu.classList.toggle('hidden');
+          iconOpen.classList.toggle('hidden');
+          iconClose.classList.toggle('hidden');
+        });
+      }
+    })();
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

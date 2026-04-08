@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory — StockPilot{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  {# ── Page Header ── #}
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Inventory</h1>
+      <p class="mt-1 text-sm text-slate-500">Manage and browse all inventory items.</p>
+    </div>
+    {% if current_user %}
+      <a href="/items/new" class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors shadow-sm whitespace-nowrap">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Add Item
+      </a>
+    {% endif %}
+  </div>
+
+  {# ── Search / Filter / Sort Bar ── #}
+  <form method="get" action="/items" class="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      {# Search #}
+      <div class="sm:col-span-2 lg:col-span-1">
+        <label for="search" class="block text-xs font-medium text-slate-500 mb-1">Search</label>
+        <div class="relative">
+          <input
+            type="text"
+            id="search"
+            name="search"
+            value="{{ search | default('', true) }}"
+            placeholder="Name or SKU…"
+            class="w-full rounded-md border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-700 placeholder-slate-400 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-colors"
+          >
+          <svg class="absolute left-2.5 top-2.5 w-4 h-4 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+        </div>
+      </div>
+
+      {# Category Filter #}
+      <div>
+        <label for="category" class="block text-xs font-medium text-slate-500 mb-1">Category</label>
+        <select
+          id="category"
+          name="category"
+          class="w-full rounded-md border border-slate-300 bg-white py-2 px-3 text-sm text-slate-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-colors"
+        >
+          <option value="">All Categories</option>
+          {% for cat in categories | default([], true) %}
+            <option value="{{ cat.id }}" {% if selected_category | default('', true) | string == cat.id | string %}selected{% endif %}>{{ cat.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {# Sort #}
+      <div>
+        <label for="sort" class="block text-xs font-medium text-slate-500 mb-1">Sort By</label>
+        <select
+          id="sort"
+          name="sort"
+          class="w-full rounded-md border border-slate-300 bg-white py-2 px-3 text-sm text-slate-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-colors"
+        >
+          <option value="name_asc" {% if sort | default('name_asc', true) == 'name_asc' %}selected{% endif %}>Name (A–Z)</option>
+          <option value="name_desc" {% if sort | default('', true) == 'name_desc' %}selected{% endif %}>Name (Z–A)</option>
+          <option value="quantity_asc" {% if sort | default('', true) == 'quantity_asc' %}selected{% endif %}>Quantity (Low → High)</option>
+          <option value="quantity_desc" {% if sort | default('', true) == 'quantity_desc' %}selected{% endif %}>Quantity (High → Low)</option>
+          <option value="price_asc" {% if sort | default('', true) == 'price_asc' %}selected{% endif %}>Price (Low → High)</option>
+          <option value="price_desc" {% if sort | default('', true) == 'price_desc' %}selected{% endif %}>Price (High → Low)</option>
+          <option value="date_desc" {% if sort | default('', true) == 'date_desc' %}selected{% endif %}>Newest First</option>
+          <option value="date_asc" {% if sort | default('', true) == 'date_asc' %}selected{% endif %}>Oldest First</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mt-4 flex items-center gap-3">
+      <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors shadow-sm">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+        </svg>
+        Apply Filters
+      </button>
+      <a href="/items" class="px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition-colors">Clear</a>
+    </div>
+  </form>
+
+  {# ── Results Summary ── #}
+  <div class="flex items-center justify-between">
+    <p class="text-sm text-slate-500">
+      {% if inventory_items | default([], true) | length > 0 %}
+        Showing <span class="font-medium text-slate-700">{{ inventory_items | length }}</span> item{{ 's' if inventory_items | length != 1 else '' }}
+        {% if search | default('', true) %}
+          matching "<span class="font-medium text-slate-700">{{ search }}</span>"
+        {% endif %}
+      {% else %}
+        No items found.
+      {% endif %}
+    </p>
+  </div>
+
+  {# ── Inventory Grid ── #}
+  {% if inventory_items | default([], true) | length > 0 %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {% for item in inventory_items %}
+        <div class="bg-white rounded-lg shadow-sm border border-slate-200 hover:shadow-md transition-shadow flex flex-col">
+          {# Card Body #}
+          <div class="p-4 flex-1 flex flex-col gap-3">
+
+            {# Top row: Name + Category badge #}
+            <div class="flex items-start justify-between gap-2">
+              <a href="/items/{{ item.id }}" class="text-base font-semibold text-slate-800 hover:text-teal-700 transition-colors leading-tight line-clamp-2">
+                {{ item.name }}
+              </a>
+              {% if item.category %}
+                <span class="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                  {{ item.category.name if item.category is mapping and item.category.name is defined else (item.category_name | default(item.category, true)) }}
+                </span>
+              {% endif %}
+            </div>
+
+            {# SKU #}
+            {% if item.sku | default('', true) %}
+              <p class="text-xs text-slate-400 font-mono tracking-wide">SKU: {{ item.sku }}</p>
+            {% endif %}
+
+            {# Quantity indicator #}
+            <div class="flex items-center gap-2">
+              {% set qty = item.quantity | default(0, true) | int %}
+              {% set low_stock_threshold = item.low_stock_threshold | default(10, true) | int %}
+              {% if qty <= 0 %}
+                {% set qty_bg = 'bg-red-100' %}
+                {% set qty_text = 'text-red-700' %}
+                {% set qty_dot = 'bg-red-500' %}
+                {% set qty_label = 'Out of Stock' %}
+              {% elif qty <= low_stock_threshold %}
+                {% set qty_bg = 'bg-amber-100' %}
+                {% set qty_text = 'text-amber-700' %}
+                {% set qty_dot = 'bg-amber-500' %}
+                {% set qty_label = 'Low Stock' %}
+              {% else %}
+                {% set qty_bg = 'bg-green-100' %}
+                {% set qty_text = 'text-green-700' %}
+                {% set qty_dot = 'bg-green-500' %}
+                {% set qty_label = 'In Stock' %}
+              {% endif %}
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium {{ qty_bg }} {{ qty_text }} {% if qty <= 0 %}low-stock-pulse{% endif %}">
+                <span class="w-1.5 h-1.5 rounded-full {{ qty_dot }}" aria-hidden="true"></span>
+                {{ qty }} — {{ qty_label }}
+              </span>
+            </div>
+
+            {# Price #}
+            <div class="mt-auto pt-2">
+              <span class="text-lg font-bold text-slate-900">${{ "%.2f" | format(item.unit_price | default(0, true) | float) }}</span>
+              <span class="text-xs text-slate-400 ml-1">per unit</span>
+            </div>
+
+            {# Creator #}
+            {% if item.created_by_user or item.creator_name | default('', true) %}
+              <p class="text-xs text-slate-400">
+                Added by
+                <span class="text-slate-500 font-medium">
+                  {{ item.created_by_user.display_name if item.created_by_user is defined and item.created_by_user else (item.creator_name | default('Unknown', true)) }}
+                </span>
+              </p>
+            {% endif %}
+          </div>
+
+          {# Card Footer: Actions #}
+          {% if current_user %}
+            <div class="border-t border-slate-100 px-4 py-3 flex items-center justify-end gap-2">
+              <a href="/items/{{ item.id }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-slate-600 hover:text-teal-700 hover:bg-teal-50 transition-colors" title="View details">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                </svg>
+                View
+              </a>
+              {% set is_owner = (current_user.id | default(0) | string) == (item.created_by | default('') | string) %}
+              {% if user_role == 'admin' or is_owner %}
+                <a href="/items/{{ item.id }}/edit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-slate-600 hover:text-amber-700 hover:bg-amber-50 transition-colors" title="Edit item">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                  </svg>
+                  Edit
+                </a>
+                <form method="post" action="/items/{{ item.id }}/delete" class="inline" onsubmit="return confirm('Are you sure you want to delete &quot;{{ item.name }}&quot;?');">
+                  <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-slate-600 hover:text-red-700 hover:bg-red-50 transition-colors" title="Delete item">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                    </svg>
+                    Delete
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    {# ── Empty State ── #}
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-12 text-center">
+      <div class="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-slate-100 text-3xl mb-4" aria-hidden="true">📦</div>
+      <h2 class="text-lg font-semibold text-slate-700 mb-1">No inventory items found</h2>
+      <p class="text-sm text-slate-500 mb-6">
+        {% if search | default('', true) or selected_category | default('', true) %}
+          Try adjusting your search or filter criteria.
+        {% else %}
+          Get started by adding your first inventory item.
+        {% endif %}
+      </p>
+      {% if current_user %}
+        <a href="/items/new" class="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors shadow-sm">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          Add Your First Item
+        </a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {# ── Pagination ── #}
+  {% if total_pages | default(0, true) | int > 1 %}
+    <nav class="flex items-center justify-center gap-1 mt-6" aria-label="Pagination">
+      {% set current_page = page | default(1, true) | int %}
+      {% set pages = total_pages | int %}
+
+      {# Previous #}
+      {% if current_page > 1 %}
+        <a href="?page={{ current_page - 1 }}{% if search | default('', true) %}&search={{ search }}{% endif %}{% if selected_category | default('', true) %}&category={{ selected_category }}{% endif %}{% if sort | default('', true) %}&sort={{ sort }}{% endif %}" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors" aria-label="Previous page">
+          ← Prev
+        </a>
+      {% else %}
+        <span class="px-3 py-2 rounded-md text-sm font-medium text-slate-300 cursor-not-allowed">← Prev</span>
+      {% endif %}
+
+      {# Page numbers #}
+      {% for p in range(1, pages + 1) %}
+        {% if p == current_page %}
+          <span class="px-3 py-2 rounded-md text-sm font-medium text-white bg-teal-600 shadow-sm" aria-current="page">{{ p }}</span>
+        {% elif p == 1 or p == pages or (p >= current_page - 2 and p <= current_page + 2) %}
+          <a href="?page={{ p }}{% if search | default('', true) %}&search={{ search }}{% endif %}{% if selected_category | default('', true) %}&category={{ selected_category }}{% endif %}{% if sort | default('', true) %}&sort={{ sort }}{% endif %}" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">{{ p }}</a>
+        {% elif p == current_page - 3 or p == current_page + 3 %}
+          <span class="px-2 py-2 text-sm text-slate-400">…</span>
+        {% endif %}
+      {% endfor %}
+
+      {# Next #}
+      {% if current_page < pages %}
+        <a href="?page={{ current_page + 1 }}{% if search | default('', true) %}&search={{ search }}{% endif %}{% if selected_category | default('', true) %}&category={{ selected_category }}{% endif %}{% if sort | default('', true) %}&sort={{ sort }}{% endif %}" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors" aria-label="Next page">
+          Next →
+        </a>
+      {% else %}
+        <span class="px-3 py-2 rounded-md text-sm font-medium text-slate-300 cursor-not-allowed">Next →</span>
+      {% endif %}
+    </nav>
+  {% endif %}
+
+</div>
+{% endblock %}

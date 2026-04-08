@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}StockPilot — Modern Inventory Management{% endblock %}
+
+{% block content %}
+{# ── Hero Section ── #}
+<div class="relative -mx-4 sm:-mx-6 lg:-mx-8 -mt-6 px-4 sm:px-6 lg:px-8 py-16 sm:py-24 bg-gradient-to-br from-emerald-600 to-teal-700 text-white overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute top-10 left-10 text-9xl">📦</div>
+    <div class="absolute bottom-10 right-10 text-9xl">📊</div>
+  </div>
+  <div class="relative max-w-3xl mx-auto text-center">
+    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4">
+      Take Control of Your Inventory
+    </h1>
+    <p class="text-lg sm:text-xl text-emerald-100 mb-8 max-w-2xl mx-auto leading-relaxed">
+      StockPilot is a modern, full-stack inventory management system built for speed, clarity, and ease of use. Track stock levels, manage categories, and stay on top of low-stock alerts — all in one place.
+    </p>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+      {% if current_user %}
+        <a href="/dashboard" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 rounded-lg text-base font-semibold bg-white text-teal-700 hover:bg-emerald-50 transition-colors shadow-lg">
+          Go to Dashboard
+        </a>
+        <a href="/items" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 rounded-lg text-base font-semibold border-2 border-white text-white hover:bg-white hover:text-teal-700 transition-colors">
+          View Inventory
+        </a>
+      {% else %}
+        <a href="/register" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 rounded-lg text-base font-semibold bg-white text-teal-700 hover:bg-emerald-50 transition-colors shadow-lg">
+          Get Started
+        </a>
+        <a href="/login" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 rounded-lg text-base font-semibold border-2 border-white text-white hover:bg-white hover:text-teal-700 transition-colors">
+          Login
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{# ── Feature Cards Section ── #}
+<section class="py-12 sm:py-16">
+  <div class="text-center mb-10">
+    <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-3">Everything You Need to Manage Inventory</h2>
+    <p class="text-slate-500 text-base sm:text-lg max-w-xl mx-auto">Powerful features designed to keep your stock organized, your team informed, and your business running smoothly.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {# Feature 1: Inventory Management #}
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow">
+      <div class="text-4xl mb-4" aria-hidden="true">📦</div>
+      <h3 class="font-semibold text-lg text-slate-800 mb-2">Inventory Management</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Full CRUD operations for all your inventory items. Track quantities, pricing, and stock levels with ease.</p>
+    </div>
+
+    {# Feature 2: Category Organization #}
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow">
+      <div class="text-4xl mb-4" aria-hidden="true">🏷️</div>
+      <h3 class="font-semibold text-lg text-slate-800 mb-2">Category Organization</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Organize items into categories for quick browsing and filtering. Keep your warehouse structured and searchable.</p>
+    </div>
+
+    {# Feature 3: Low-Stock Alerts #}
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow">
+      <div class="text-4xl mb-4" aria-hidden="true">🔔</div>
+      <h3 class="font-semibold text-lg text-slate-800 mb-2">Low-Stock Alerts</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Get notified when items fall below threshold levels. Never run out of critical stock again.</p>
+    </div>
+
+    {# Feature 4: Dashboard Analytics #}
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow">
+      <div class="text-4xl mb-4" aria-hidden="true">📊</div>
+      <h3 class="font-semibold text-lg text-slate-800 mb-2">Dashboard &amp; Analytics</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Overview of stock levels, inventory value summaries, and key performance indicators at a glance.</p>
+    </div>
+
+    {# Feature 5: Role-Based Access #}
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow">
+      <div class="text-4xl mb-4" aria-hidden="true">🛡️</div>
+      <h3 class="font-semibold text-lg text-slate-800 mb-2">Role-Based Access</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Admin and Staff roles with granular permissions. Control who can view, edit, and manage your inventory.</p>
+    </div>
+
+    {# Feature 6: Activity Logging #}
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow">
+      <div class="text-4xl mb-4" aria-hidden="true">📝</div>
+      <h3 class="font-semibold text-lg text-slate-800 mb-2">Activity Logging</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Full audit trail of every inventory change. Track who did what and when for complete accountability.</p>
+    </div>
+  </div>
+</section>
+
+{# ── CTA Section ── #}
+<section class="py-12 sm:py-16">
+  <div class="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-2xl shadow-lg px-6 sm:px-12 py-10 sm:py-14 text-center text-white">
+    <h2 class="text-2xl sm:text-3xl font-bold mb-3">Ready to Streamline Your Inventory?</h2>
+    <p class="text-teal-100 text-base sm:text-lg mb-8 max-w-lg mx-auto">Get started in seconds. No credit card required. Manage your stock smarter, not harder.</p>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+      {% if current_user %}
+        <a href="/dashboard" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 rounded-lg text-base font-semibold bg-white text-teal-700 hover:bg-emerald-50 transition-colors shadow-lg">
+          Go to Dashboard
+        </a>
+      {% else %}
+        <a href="/register" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 rounded-lg text-base font-semibold bg-white text-teal-700 hover:bg-emerald-50 transition-colors shadow-lg">
+          Create Free Account
+        </a>
+        <a href="/login" class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 rounded-lg text-base font-semibold border-2 border-white text-white hover:bg-white hover:text-teal-700 transition-colors">
+          Sign In
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

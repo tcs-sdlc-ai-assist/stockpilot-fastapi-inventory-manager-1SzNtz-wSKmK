@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — StockPilot{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  {# ── Page Header ── #}
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900">Dashboard</h1>
+      <p class="text-sm text-slate-500 mt-1">Overview of your inventory at a glance.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="/items/new" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors shadow-sm">
+        <span aria-hidden="true">＋</span> Add Item
+      </a>
+      <a href="/categories" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors shadow-sm">
+        <span aria-hidden="true">🏷️</span> Categories
+      </a>
+      {% if user_role == "admin" %}
+      <a href="/users" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors shadow-sm">
+        <span aria-hidden="true">👥</span> Users
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Stat Cards ── #}
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+    {# Total Items #}
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+      <div class="flex-shrink-0 w-12 h-12 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xl" aria-hidden="true">📦</div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Total Items</p>
+        <p class="text-2xl font-bold text-slate-900">{{ stats.total_items | default(0) }}</p>
+      </div>
+    </div>
+
+    {# Total Inventory Value #}
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+      <div class="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl" aria-hidden="true">💰</div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Inventory Value</p>
+        <p class="text-2xl font-bold text-slate-900">${{ "%.2f" | format(stats.total_value | default(0)) }}</p>
+      </div>
+    </div>
+
+    {# Low-Stock Count #}
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+      <div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xl" aria-hidden="true">⚠️</div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Low Stock</p>
+        <p class="text-2xl font-bold {% if (stats.low_stock_count | default(0)) > 0 %}text-amber-600{% else %}text-slate-900{% endif %}">{{ stats.low_stock_count | default(0) }}</p>
+      </div>
+    </div>
+
+    {# Total Users #}
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+      <div class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl" aria-hidden="true">👥</div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Total Users</p>
+        <p class="text-2xl font-bold text-slate-900">{{ stats.total_users | default(0) }}</p>
+      </div>
+    </div>
+
+  </div>
+
+  {# ── Low-Stock Alerts ── #}
+  <div class="bg-white rounded-lg shadow-sm border border-slate-200">
+    <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-slate-900 flex items-center gap-2">
+        <span class="text-amber-500" aria-hidden="true">⚠️</span> Low-Stock Alerts
+      </h2>
+      {% if low_stock_items and low_stock_items | length > 0 %}
+      <span class="low-stock-pulse inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+        {{ low_stock_items | length }} item{{ "s" if low_stock_items | length != 1 else "" }}
+      </span>
+      {% endif %}
+    </div>
+    <div class="overflow-x-auto">
+      {% if low_stock_items and low_stock_items | length > 0 %}
+      <table class="inventory-table w-full text-sm text-left">
+        <thead>
+          <tr class="bg-slate-50 text-slate-600 uppercase text-xs tracking-wider">
+            <th class="px-5 py-3 font-medium">Item Name</th>
+            <th class="px-5 py-3 font-medium">Category</th>
+            <th class="px-5 py-3 font-medium text-right">Quantity</th>
+            <th class="px-5 py-3 font-medium text-right">Reorder Level</th>
+            <th class="px-5 py-3 font-medium text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for item in low_stock_items %}
+          <tr>
+            <td class="px-5 py-3 font-medium text-slate-900 whitespace-nowrap">
+              <a href="/items/{{ item.id }}" class="hover:text-teal-600 transition-colors">{{ item.name }}</a>
+            </td>
+            <td class="px-5 py-3 text-slate-600 whitespace-nowrap">{{ item.category_name | default("Uncategorized") }}</td>
+            <td class="px-5 py-3 text-right font-semibold {% if item.quantity == 0 %}text-red-600{% else %}text-amber-600{% endif %}">{{ item.quantity }}</td>
+            <td class="px-5 py-3 text-right text-slate-600">{{ item.reorder_level | default(0) }}</td>
+            <td class="px-5 py-3 text-center">
+              {% if item.quantity == 0 %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Out of Stock</span>
+              {% else %}
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">Low Stock</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="px-5 py-10 text-center">
+        <p class="text-slate-400 text-sm">No low-stock alerts. All items are well stocked! 🎉</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Recent Activity ── #}
+  <div class="bg-white rounded-lg shadow-sm border border-slate-200">
+    <div class="px-5 py-4 border-b border-slate-200">
+      <h2 class="text-lg font-semibold text-slate-900 flex items-center gap-2">
+        <span class="text-blue-500" aria-hidden="true">🕒</span> Recent Activity
+      </h2>
+    </div>
+    <div class="divide-y divide-slate-100">
+      {% if recent_activity and recent_activity | length > 0 %}
+        {% for activity in recent_activity %}
+        <div class="px-5 py-3 flex items-center gap-3">
+          <div class="flex-shrink-0">
+            {% if activity.action == "created" %}
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 text-sm" aria-hidden="true">＋</span>
+            {% elif activity.action == "updated" %}
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 text-sm" aria-hidden="true">✏️</span>
+            {% elif activity.action == "deleted" %}
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 text-sm" aria-hidden="true">🗑️</span>
+            {% else %}
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 text-sm" aria-hidden="true">📋</span>
+            {% endif %}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm text-slate-900">
+              <span class="font-medium">{{ activity.user | default("System") }}</span>
+              {{ activity.action | default("performed an action on") }}
+              <span class="font-medium">{{ activity.item_name | default("an item") }}</span>
+            </p>
+            {% if activity.timestamp %}
+            <p class="text-xs text-slate-400 mt-0.5">{{ activity.timestamp }}</p>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+      <div class="px-5 py-10 text-center">
+        <p class="text-slate-400 text-sm">No recent activity to display.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Quick Actions (Mobile-friendly) ── #}
+  <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-5">
+    <h2 class="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+      <span class="text-teal-500" aria-hidden="true">⚡</span> Quick Actions
+    </h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <a href="/items/new" class="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-200 hover:border-teal-300 hover:bg-teal-50 transition-colors group">
+        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-lg group-hover:bg-teal-200 transition-colors" aria-hidden="true">＋</span>
+        <div>
+          <p class="text-sm font-medium text-slate-900 group-hover:text-teal-700 transition-colors">Add New Item</p>
+          <p class="text-xs text-slate-500">Create an inventory item</p>
+        </div>
+      </a>
+      <a href="/categories" class="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-200 hover:border-teal-300 hover:bg-teal-50 transition-colors group">
+        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg group-hover:bg-emerald-200 transition-colors" aria-hidden="true">🏷️</span>
+        <div>
+          <p class="text-sm font-medium text-slate-900 group-hover:text-teal-700 transition-colors">Manage Categories</p>
+          <p class="text-xs text-slate-500">Organize your inventory</p>
+        </div>
+      </a>
+      {% if user_role == "admin" %}
+      <a href="/users" class="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-200 hover:border-teal-300 hover:bg-teal-50 transition-colors group">
+        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-lg group-hover:bg-blue-200 transition-colors" aria-hidden="true">👥</span>
+        <div>
+          <p class="text-sm font-medium text-slate-900 group-hover:text-teal-700 transition-colors">Manage Users</p>
+          <p class="text-xs text-slate-500">Add or edit user accounts</p>
+        </div>
+      </a>
+      {% endif %}
+      <a href="/items" class="flex items-center gap-3 px-4 py-3 rounded-lg border border-slate-200 hover:border-teal-300 hover:bg-teal-50 transition-colors group">
+        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-lg group-hover:bg-amber-200 transition-colors" aria-hidden="true">📋</span>
+        <div>
+          <p class="text-sm font-medium text-slate-900 group-hover:text-teal-700 transition-colors">View Inventory</p>
+          <p class="text-xs text-slate-500">Browse all items</p>
+        </div>
+      </a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

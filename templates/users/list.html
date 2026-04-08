@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Users — StockPilot{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  {# ── Page Header ── #}
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900">User Management</h1>
+      <p class="mt-1 text-sm text-slate-500">Manage user accounts, roles, and permissions.</p>
+    </div>
+    <div class="flex items-center gap-2 text-sm text-slate-500">
+      <span class="inline-flex items-center gap-1 bg-slate-100 px-3 py-1 rounded-full font-medium">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
+        {{ users | length }} user{{ "s" if users | length != 1 else "" }}
+      </span>
+    </div>
+  </div>
+
+  {# ── Add User Form ── #}
+  <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+    <h2 class="text-lg font-semibold text-slate-800 mb-4">Add New User</h2>
+    <form method="POST" action="/users" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+      <div>
+        <label for="username" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+        <input type="text" id="username" name="username" required minlength="3" maxlength="32"
+               class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 placeholder-slate-400"
+               placeholder="e.g. jsmith">
+      </div>
+      <div>
+        <label for="display_name" class="block text-sm font-medium text-slate-700 mb-1">Display Name</label>
+        <input type="text" id="display_name" name="display_name" required maxlength="64"
+               class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 placeholder-slate-400"
+               placeholder="e.g. John Smith">
+      </div>
+      <div>
+        <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+        <input type="password" id="password" name="password" required minlength="6" maxlength="128"
+               class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 placeholder-slate-400"
+               placeholder="Min 6 characters">
+      </div>
+      <div>
+        <label for="role" class="block text-sm font-medium text-slate-700 mb-1">Role</label>
+        <select id="role" name="role" required
+                class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 bg-white">
+          <option value="staff">Staff</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div>
+        <button type="submit"
+                class="w-full inline-flex items-center justify-center gap-2 rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-colors">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+          Add User
+        </button>
+      </div>
+    </form>
+  </div>
+
+  {# ── Users Table ── #}
+  <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+    {% if users and users | length > 0 %}
+      {# Desktop table #}
+      <div class="hidden md:block overflow-x-auto">
+        <table class="w-full inventory-table">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200">
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Display Name</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Joined</th>
+              <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for user in users %}
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center gap-3">
+                    <div class="avatar-wrapper">
+                      {{ avatar(user.role | default("staff"), "sm") }}
+                      <span class="avatar-tooltip">{{ user.username }}</span>
+                    </div>
+                    <span class="text-sm font-medium text-slate-900">{{ user.username }}</span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                  {{ user.display_name | default("—") }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  {% if user.role == "admin" %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">Admin</span>
+                  {% else %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700">Staff</span>
+                  {% endif %}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                  {{ user.created_at.strftime("%b %d, %Y") if user.created_at else "—" }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">
+                  {% set is_self = (current_user and current_user.id == user.id) %}
+                  {% set is_default_admin = (user.username == admin_username) %}
+                  {% if is_self or is_default_admin %}
+                    <button type="button" disabled
+                            class="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium text-slate-400 bg-slate-100 cursor-not-allowed"
+                            title="{{ 'Cannot delete your own account' if is_self else 'Cannot delete the default admin' }}">
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                      Delete
+                    </button>
+                  {% else %}
+                    <button type="button"
+                            class="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
+                            onclick="openDeleteModal('{{ user.id }}', '{{ user.username | e }}')"
+                            title="Delete user {{ user.username }}">
+                      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                      Delete
+                    </button>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {# Mobile card layout #}
+      <div class="md:hidden divide-y divide-slate-100">
+        {% for user in users %}
+          <div class="p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="avatar-wrapper">
+                  {{ avatar(user.role | default("staff"), "md") }}
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-slate-900">{{ user.username }}</p>
+                  <p class="text-xs text-slate-500">{{ user.display_name | default("—") }}</p>
+                </div>
+              </div>
+              {% if user.role == "admin" %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">Admin</span>
+              {% else %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-700">Staff</span>
+              {% endif %}
+            </div>
+            <div class="flex items-center justify-between text-xs text-slate-500">
+              <span>Joined {{ user.created_at.strftime("%b %d, %Y") if user.created_at else "—" }}</span>
+              {% set is_self = (current_user and current_user.id == user.id) %}
+              {% set is_default_admin = (user.username == admin_username) %}
+              {% if is_self or is_default_admin %}
+                <button type="button" disabled
+                        class="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium text-slate-400 bg-slate-100 cursor-not-allowed"
+                        title="{{ 'Cannot delete your own account' if is_self else 'Cannot delete the default admin' }}">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                  Delete
+                </button>
+              {% else %}
+                <button type="button"
+                        class="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
+                        onclick="openDeleteModal('{{ user.id }}', '{{ user.username | e }}')"
+                        title="Delete user {{ user.username }}">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                  Delete
+                </button>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="px-6 py-12 text-center">
+        <svg class="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
+        <h3 class="mt-3 text-sm font-semibold text-slate-700">No users found</h3>
+        <p class="mt-1 text-sm text-slate-500">Add a new user using the form above.</p>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+
+{# ── Delete Confirmation Modal ── #}
+<div id="delete-modal" class="fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+  {# Backdrop #}
+  <div id="delete-modal-backdrop" class="fixed inset-0 bg-slate-900/50 transition-opacity" onclick="closeDeleteModal()"></div>
+
+  {# Modal panel #}
+  <div class="fixed inset-0 flex items-center justify-center p-4">
+    <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
+      <div class="flex items-start gap-4">
+        <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-red-100">
+          <svg class="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+        </div>
+        <div>
+          <h3 id="delete-modal-title" class="text-lg font-semibold text-slate-900">Delete User</h3>
+          <p class="mt-1 text-sm text-slate-600">
+            Are you sure you want to delete <strong id="delete-username-display" class="text-slate-800"></strong>? This action cannot be undone. All data associated with this user will be permanently removed.
+          </p>
+        </div>
+      </div>
+      <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+        <button type="button" onclick="closeDeleteModal()"
+                class="w-full sm:w-auto inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition-colors">
+          Cancel
+        </button>
+        <form id="delete-form" method="POST" action="" class="w-full sm:w-auto">
+          <input type="hidden" name="_method" value="DELETE">
+          <button type="submit"
+                  class="w-full inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors">
+            Delete User
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function() {
+    var modal = document.getElementById('delete-modal');
+    var form = document.getElementById('delete-form');
+    var usernameDisplay = document.getElementById('delete-username-display');
+
+    window.openDeleteModal = function(userId, username) {
+      if (form && usernameDisplay && modal) {
+        form.action = '/users/' + encodeURIComponent(userId) + '/delete';
+        usernameDisplay.textContent = username;
+        modal.classList.remove('hidden');
+        modal.querySelector('button[type="submit"]').focus();
+      }
+    };
+
+    window.closeDeleteModal = function() {
+      if (modal) {
+        modal.classList.add('hidden');
+      }
+    };
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+        closeDeleteModal();
+      }
+    });
+  })();
+</script>
+{% endblock %}

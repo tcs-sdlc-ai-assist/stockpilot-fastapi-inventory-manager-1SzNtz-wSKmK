@@ -1,0 +1,153 @@
+/* custom.css — Minimal custom styles for StockPilot beyond Tailwind CDN utilities */
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+
+/* Flash message dismiss animation */
+@keyframes flash-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes flash-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.flash-message {
+  animation: flash-fade-in 0.3s ease-out forwards;
+}
+
+.flash-message.dismissing {
+  animation: flash-fade-out 0.25s ease-in forwards;
+}
+
+/* Subtle pulse for low-stock alert badges */
+@keyframes pulse-alert {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.low-stock-pulse {
+  animation: pulse-alert 2s ease-in-out infinite;
+}
+
+/* Smooth page transitions */
+main {
+  animation: page-enter 0.2s ease-out;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Focus ring consistency for non-Tailwind elements */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #0d9488;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Table row hover for inventory lists */
+.inventory-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.inventory-table tbody tr:hover {
+  background-color: #f0fdfa;
+}
+
+/* Avatar tooltip positioning helper */
+.avatar-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.avatar-wrapper .avatar-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: #1e293b;
+  color: #f8fafc;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+  pointer-events: none;
+  margin-bottom: 4px;
+}
+
+.avatar-wrapper:hover .avatar-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Print styles */
+@media print {
+  nav,
+  .flash-message,
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    animation: none;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+}

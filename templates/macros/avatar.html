@@ -1,0 +1,14 @@
+{% macro avatar(role, size="md") %}
+{% if size == "sm" %}
+{% set size_classes = "w-6 h-6 text-sm" %}
+{% elif size == "lg" %}
+{% set size_classes = "w-10 h-10 text-xl" %}
+{% else %}
+{% set size_classes = "w-8 h-8 text-lg" %}
+{% endif %}
+{% if role == "admin" %}
+<span class="inline-flex items-center justify-center rounded-full bg-emerald-600 text-white {{ size_classes }}" aria-label="Admin user" role="img">🛡️</span>
+{% else %}
+<span class="inline-flex items-center justify-center rounded-full bg-teal-500 text-white {{ size_classes }}" aria-label="Staff user" role="img">📦</span>
+{% endif %}
+{% endmacro %}
